@@ -1,0 +1,138 @@
+# path: .github/workflows/playwright.yml
+name: Playwright E2E Tests (matrix + cache)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  e2e:
+    name: Playwright E2E (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20, 22]
+      fail-fast: false
+
+    permissions:
+      contents: read
+      actions: read
+
+    env:
+      # Map well-known env names used in the project to secrets (no values stored here)
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+      POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      BASE_URL: http://localhost:3000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            ~/.local/share/pnpm
+            ~/.cache/pnpm
+          key: ${{ runner.os }}-pnpm-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ matrix.node-version }}-
+            ${{ runner.os }}-pnpm-
+
+      - name: Restore Playwright browsers cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-browsers-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-browsers-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma generate
+
+      - name: Apply Prisma migrations (deploy)
+        run: pnpm prisma migrate deploy
+
+      - name: Seed database (if configured)
+        run: pnpm prisma db seed
+        continue-on-error: true
+
+      - name: Build the app (push events get full build)
+        if: github.event_name == 'push'
+        run: pnpm build
+
+      - name: Start the app (background)
+        # For PRs we also start the app so tests can run against the preview; keep consistent behavior.
+        run: |
+          # Use a lightweight background start to serve the built app for push,
+          # and `pnpm dev` for PRs if no build was performed.
+          if [ "${{ github.event_name }}" = "push" ]; then
+            pnpm start &
+          else
+            pnpm dev &
+          fi
+        env:
+          NODE_ENV: test
+
+      - name: Wait for app to respond
+        uses: jakejarvis/wait-action@v0.3.0
+        with:
+          timeout: 120
+          check-url: ${{ env.BASE_URL }}
+
+      - name: Install Playwright browsers (if cache miss, ensure binaries are available)
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        # Use faster, lighter runs for PRs (conservative workers) and full runs on push
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Running Playwright in PR mode (1 worker, retry=1)..."
+            npx playwright test --config=playwright.config.ts --workers=1
+          else
+            echo "Running Playwright in push mode (full run)..."
+            npx playwright test --config=playwright.config.ts
+          fi
+        env:
+          CI: true
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: playwright-report/html
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-junit
+          path: playwright-report/junit.xml
