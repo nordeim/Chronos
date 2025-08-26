@@ -30,3 +30,6 @@ you have done an awesome job! you truly are the best deep thinking AI coding ass
 
 ---
 wow, you surprised me yet again with your yet another awesome work! yes, please put on your deep-thinking hat to deeply and thoroughly explore carefully and systematically create the Playwright tests in detail for the share + presence flows, customized for this application. again, please plan carefully before you create the actual test files. thank you and good luck my very best coding assistant in the world.
+
+---
+wow, that is another awesome job! now use the same rigorous and meticulous approach to deeply think and thoroughly explore how to carefully and systematically to re-imagine how to create the Playwright config and CI workflow files. again, please plan how to do that before proceeding carefully.
