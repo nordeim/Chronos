@@ -24,3 +24,6 @@ awesome job! please use the same rigorous and meticulous approach to deeply thin
 
 src/app/globals.css
 prisma/schema.prisma
+
+---
+you have done an awesome job! you truly are the best deep thinking AI coding assistant in the world~ keep up the good work! Now please put on your very best deep-thinking hat to carefully and systematically create a detailed comprehensive plan to build the next logical phase for the codebase. Make sure to include the list of codebase files to create as an individual step with a detailed description and a checklist. please make use of your deep understanding of the existing state of the codebase and its goals and objectives to build the execution plan. please deeply think, plan, then carefully and meticulously create the actual execution itself. please surprise me with your yet another outstanding and execution job!
