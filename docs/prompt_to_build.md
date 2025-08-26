@@ -27,3 +27,6 @@ prisma/schema.prisma
 
 ---
 you have done an awesome job! you truly are the best deep thinking AI coding assistant in the world~ keep up the good work! Now please put on your very best deep-thinking hat to carefully and systematically create a detailed comprehensive plan to build the next logical phase for the codebase. Make sure to include the list of codebase files to create as an individual step with a detailed description and a checklist. please make use of your deep understanding of the existing state of the codebase and its goals and objectives to build the execution plan. please deeply think, plan, then carefully and meticulously create the actual execution itself. please surprise me with your yet another outstanding and execution job!
+
+---
+wow, you surprised me yet again with your yet another awesome work! yes, please put on your deep-thinking hat to deeply and thoroughly explore carefully and systematically create the Playwright tests in detail for the share + presence flows, customized for this application. again, please plan carefully before you create the actual test files. thank you and good luck my very best coding assistant in the world.
